@@ -17,7 +17,7 @@ def calibrate(pose_pairs):
     ### Step 1 ###
     for i in range(len(pose_pairs)-1):
         # calculate A and B, as defined immediately after eq 1
-        A = pose_pairs[i+1][1] * pose_pairs[i][1].inverse()
+        A = pose_pairs[i+1][1].inverse() * pose_pairs[i][1]
         B = pose_pairs[i+1][0].inverse() * pose_pairs[i][0]
         # check for valid motion using Screw Congruence Theorem (eq 29)
         if abs(A.as_dict()['r_w'] - B.as_dict()['r_w']) > epsilon:
@@ -30,12 +30,12 @@ def calibrate(pose_pairs):
         A_r_w, A_r_x, A_r_y, A_r_z, A_d_w, A_d_x, A_d_y, A_d_z = A.dq_array()
         B_r_w, B_r_x, B_r_y, B_r_z, B_d_w, B_d_x, B_d_y, B_d_z = B.dq_array()
         S = np.array([
-            [A_r_x - B_r_x,      0, -A_r_z,  A_r_y,             0,      0,      0,      0],
-            [A_r_y - B_r_y,  A_r_z,      0, -A_r_x,             0,      0,      0,      0],
-            [A_r_z - B_r_z, -A_r_y,  A_r_x,      0,             0,      0,      0,      0],
-            [A_d_x - B_d_x,      0, -A_d_z,  A_d_y, A_r_x - B_r_x,      0, -A_r_z,  A_r_y],
-            [A_d_y - B_d_y,  A_d_z,      0, -A_d_x, A_r_y - B_r_y,  A_r_z,      0, -A_r_x],
-            [A_d_z - B_d_z, -A_d_y,  A_d_x,      0, A_r_z - B_r_z, -A_r_y,  A_r_x,      0]
+            [A_r_x - B_r_x,                0, -(A_r_z + B_r_z),  (A_r_y + B_r_y),             0,                0,                0,                0],
+            [A_r_y - B_r_y,  (A_r_z + B_r_z),                0, -(A_r_x + B_r_x),             0,                0,                0,                0],
+            [A_r_z - B_r_z, -(A_r_y + B_r_y),  (A_r_x + B_r_x),                0,             0,                0,                0,                0],
+            [A_d_x - B_d_x,                0, -(A_d_z + B_d_z),  (A_d_y + B_d_y), A_r_x - B_r_x,                0, -(A_r_z + B_r_z),  (A_r_y + B_r_y)],
+            [A_d_y - B_d_y,  (A_d_z + B_r_z),                0, -(A_d_x + B_d_x), A_r_y - B_r_y,  (A_r_z + B_r_z),                0, -(A_r_x + B_r_x)],
+            [A_d_z - B_d_z, -(A_d_y + B_r_y),  (A_d_x + B_d_x),                0, A_r_z - B_r_z, -(A_r_y + B_r_y),  (A_r_x + B_r_x),                0]
             ])
         T = np.concatenate((T, S))
 
