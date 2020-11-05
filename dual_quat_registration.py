@@ -17,14 +17,18 @@ def calibrate(pose_pairs):
     ### Step 1 ###
     for i in range(len(pose_pairs)-1):
         # calculate A and B, as defined immediately after eq 1
-        A = pose_pairs[i+1][1].inverse() * pose_pairs[i][1]
+        A = pose_pairs[i+1][1] * pose_pairs[i][1].inverse()
         B = pose_pairs[i+1][0].inverse() * pose_pairs[i][0]
         # check for valid motion using Screw Congruence Theorem (eq 29)
-        if abs(A.as_dict()['r_w'] - B.as_dict()['r_w']) > epsilon:
+        if A.as_dict()['r_w'] * B.as_dict()['r_w'] < 0:
             B = -1. * B
         if (abs(A.as_dict()['r_w'] - B.as_dict()['r_w']) > epsilon or
                 abs(A.as_dict()['d_w'] - B.as_dict()['d_w']) > epsilon):
             print("Bad motion from pose {} to pose {}. Angle or screw pitch inconsistent.".format(i, i+1))
+            print("  A: r_w={:8.5f}, B r_w={:8.5f}, abs. error {:8.5f}".format(A.as_dict()['r_w'], B.as_dict()['r_w'],
+                abs(A.as_dict()['r_w'] - B.as_dict()['r_w'])))
+            print("  A: d_w={:8.5f}, B d_w={:8.5f}, abs. error {:8.5f}".format(A.as_dict()['d_w'], B.as_dict()['d_w'],
+                abs(A.as_dict()['d_w'] - B.as_dict()['d_w'])))
             continue
         # build T matrix
         A_r_w, A_r_x, A_r_y, A_r_z, A_d_w, A_d_x, A_d_y, A_d_z = A.dq_array()
