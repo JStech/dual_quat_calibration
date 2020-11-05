@@ -7,7 +7,8 @@ from dual_quaternions import dual_quaternions as dq
 #   Research 18.3 (1999): 286-298.
 # All references are to this paper
 
-epsilon = 1e-3
+epsilon = 1e-2
+verbose = False
 
 def calibrate(pose_pairs):
     n_motions = len(pose_pairs)-1
@@ -22,13 +23,15 @@ def calibrate(pose_pairs):
         # check for valid motion using Screw Congruence Theorem (eq 29)
         if A.as_dict()['r_w'] * B.as_dict()['r_w'] < 0:
             B = -1. * B
-        if (abs(A.as_dict()['r_w'] - B.as_dict()['r_w']) > epsilon or
-                abs(A.as_dict()['d_w'] - B.as_dict()['d_w']) > epsilon):
-            print("Bad motion from pose {} to pose {}. Angle or screw pitch inconsistent.".format(i, i+1))
+        if verbose:
+            print("Motion from {} to {}".format(i, i+1))
             print("  A: r_w={:8.5f}, B r_w={:8.5f}, abs. error {:8.5f}".format(A.as_dict()['r_w'], B.as_dict()['r_w'],
                 abs(A.as_dict()['r_w'] - B.as_dict()['r_w'])))
             print("  A: d_w={:8.5f}, B d_w={:8.5f}, abs. error {:8.5f}".format(A.as_dict()['d_w'], B.as_dict()['d_w'],
                 abs(A.as_dict()['d_w'] - B.as_dict()['d_w'])))
+        if (abs(A.as_dict()['r_w'] - B.as_dict()['r_w']) > epsilon or
+                abs(A.as_dict()['d_w'] - B.as_dict()['d_w']) > epsilon):
+            print("Bad motion from pose {} to pose {}. Angle or screw pitch inconsistent.".format(i, i+1))
             continue
         # build T matrix
         A_r_w, A_r_x, A_r_y, A_r_z, A_d_w, A_d_x, A_d_y, A_d_z = A.dq_array()
@@ -92,5 +95,10 @@ def read_file_and_calibrate(filename):
 
 if __name__ == "__main__":
     import sys
-    for fn in sys.argv[1:]:
+    args = sys.argv[1:]
+    if args[0] in ("-v", "--verbose"):
+        verbose = True
+        args = args[1:]
+    for fn in args:
+        print("Calibration from", fn)
         read_file_and_calibrate(fn)
